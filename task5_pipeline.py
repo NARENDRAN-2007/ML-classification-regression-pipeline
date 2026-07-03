@@ -1,11 +1,4 @@
-"""
-Task 5: Machine Learning Modeling
-------------------------------------------------------------------
-Full pipeline: raw data -> preprocessing -> model training ->
-evaluation -> interpretation, for both a classification problem
-(Titanic survival) and a regression problem (California housing
-prices), per the task brief's recommended datasets.
-"""
+
 
 import pandas as pd
 import numpy as np
@@ -28,9 +21,7 @@ from sklearn.metrics import (
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 200)
 
-# ==================================================================
-# PART A — CLASSIFICATION: Titanic survival prediction
-# ==================================================================
+
 print("="*70)
 print("PART A: CLASSIFICATION — Titanic survival")
 print("="*70)
@@ -39,7 +30,6 @@ df = pd.read_csv('titanic.csv')
 print("Dataset shape:", df.shape)
 print("\nMissing values:\n", df.isnull().sum())
 
-# --- 1. Data preparation & feature engineering ---
 df['age'] = df['age'].fillna(df['age'].median())
 df['embarked'] = df['embarked'].fillna(df['embarked'].mode()[0])
 
@@ -55,18 +45,15 @@ categorical_features = ['sex', 'embarked']
 numerical_features = ['pclass', 'age', 'sibsp', 'parch', 'fare',
                        'FamilySize', 'IsAlone']
 
-# --- 2. Preprocessing pipeline ---
 preprocessor = ColumnTransformer(transformers=[
     ('num', StandardScaler(), numerical_features),
     ('cat', OneHotEncoder(drop='first'), categorical_features)
 ])
 
-# --- 3. Train/test split (stratified, before any fitting) ---
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# --- 4. Model training: 2+ algorithms ---
 clf_models = {
     'Logistic Regression': Pipeline([
         ('preprocessor', preprocessor),
@@ -101,7 +88,7 @@ print("\nModel comparison:\n", clf_results_df)
 best_clf_name = clf_results_df['ROC-AUC'].idxmax()
 print(f"\nBest classifier by ROC-AUC: {best_clf_name}")
 
-# --- 5. Hyperparameter tuning (bonus) on the best model family ---
+
 if best_clf_name == 'Random Forest':
     param_grid = {'classifier__n_estimators': [50, 100, 200],
                   'classifier__max_depth': [5, 10, None]}
@@ -114,7 +101,6 @@ grid_search.fit(X_train, y_train)
 print(f"\nTuned {best_clf_name} best params: {grid_search.best_params_}")
 print(f"Tuned {best_clf_name} CV ROC-AUC: {grid_search.best_score_:.4f}")
 
-# --- 6. Feature importance (Random Forest) ---
 rf_pipeline = clf_models['Random Forest']
 feature_names = (numerical_features +
                   list(rf_pipeline.named_steps['preprocessor']
@@ -134,7 +120,7 @@ plt.savefig('titanic_feature_importance.png', dpi=150)
 plt.close()
 print("Saved: titanic_feature_importance.png")
 
-# --- 7. Business insight ---
+
 survival_by_sex = df.groupby('sex')['survived'].mean() * 100
 survival_by_class = df.groupby('pclass')['survived'].mean() * 100
 print("\nSurvival rate by sex (%):\n", survival_by_sex.round(1))
@@ -142,9 +128,7 @@ print("\nSurvival rate by class (%):\n", survival_by_class.round(1))
 
 clf_results_df.to_csv('titanic_model_comparison.csv')
 
-# ==================================================================
-# PART B — REGRESSION: California housing price prediction
-# ==================================================================
+
 print("\n\n" + "="*70)
 print("PART B: REGRESSION — California housing prices")
 print("="*70)
@@ -153,7 +137,7 @@ housing = pd.read_csv('housing.csv')
 print("Dataset shape:", housing.shape)
 print("\nMissing values:\n", housing.isnull().sum())
 
-# --- Preprocessing ---
+
 housing = housing.dropna()  # total_bedrooms has some missing values
 X_housing = housing.drop('median_house_value', axis=1)
 y_housing = housing['median_house_value']
@@ -199,7 +183,6 @@ print("\nRegression model comparison:\n", reg_results_df)
 best_reg_name = reg_results_df['R2'].idxmax()
 print(f"\nBest regressor by R2: {best_reg_name}")
 
-# --- Feature importance for housing RF ---
 rf_h_pipeline = regression_models['Random Forest Regressor']
 feature_names_h = (numerical_features_h +
                     list(rf_h_pipeline.named_steps['preprocessor']
